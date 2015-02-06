@@ -9,7 +9,7 @@ import "os/exec"
 var ramdiskSizeInGigabytes int
 
 func init() {
-        flag.IntVar(&ramdiskSizeInGigabytes, "size", 4, "ramdisk size in gigabytes")
+	flag.IntVar(&ramdiskSizeInGigabytes, "size", 4, "ramdisk size in gigabytes")
 }
 
 // https://bogner.sh/2012/12/os-x-create-a-ram-disk-the-easy-way/
@@ -66,11 +66,15 @@ func verboseExec(args ...string) string {
 // http://www.observium.org/wiki/Persistent_RAM_disk_RRD_storage
 func main() {
 
-        flag.Parse()
-	if len(flag.Args()) == 0 {
-		fmt.Println("Usage: ramdisk {start|stop|sync}")
-		flag.Usage()
+	flag.Usage = func() {
+		fmt.Printf("Usage: ramdisk [options] {start|sync|stop}>\n")
+		flag.PrintDefaults()
 		os.Exit(1)
+	}
+
+	flag.Parse()
+	if len(flag.Args()) == 0 {
+		flag.Usage()
 	}
 
 	command := flag.Args()[0]
@@ -82,6 +86,8 @@ func main() {
 		stop()
 	case "sync":
 		sync()
+	default:
+		flag.Usage()
 	}
 
 }

@@ -1,17 +1,15 @@
 package main
 
-import "syscall"
 import "os"
 import "fmt"
+import "flag"
 import "strings"
 import "os/exec"
 
-func rsync(args ...string) {
-	env := os.Environ()
-	execErr := syscall.Exec("rsync", args, env)
-	if execErr != nil {
-		panic(execErr)
-	}
+var ramdiskSizeInGigabytes int
+
+func init() {
+        flag.IntVar(&ramdiskSizeInGigabytes, "size", 4, "ramdisk size in gigabytes")
 }
 
 // https://bogner.sh/2012/12/os-x-create-a-ram-disk-the-easy-way/
@@ -30,7 +28,7 @@ func getRamdiskBackupDir() string {
 }
 
 func start() {
-	sectors := convertGigabytesToSectors(4)
+	sectors := convertGigabytesToSectors(ramdiskSizeInGigabytes)
 	device := verboseExec("hdiutil", "attach", "-nomount", fmt.Sprintf("ram://%d", sectors))
 
 	verboseExec("diskutil", "erasevolume", "HFS+", "ramdisk", device)
@@ -68,12 +66,14 @@ func verboseExec(args ...string) string {
 // http://www.observium.org/wiki/Persistent_RAM_disk_RRD_storage
 func main() {
 
-	if len(os.Args) == 1 {
-		fmt.Println("Usage: /etc/init.d/ramdisk {start|stop|sync}")
+        flag.Parse()
+	if len(flag.Args()) == 0 {
+		fmt.Println("Usage: ramdisk {start|stop|sync}")
+		flag.Usage()
 		os.Exit(1)
 	}
 
-	command := os.Args[1]
+	command := flag.Args()[0]
 
 	switch command {
 	case "start":

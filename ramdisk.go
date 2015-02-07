@@ -42,6 +42,15 @@ func stop() {
 	verboseExec("diskutil", "eject", "ramdisk")
 }
 
+func status() {
+	result := verboseExec("diskutil", "list", "ramdisk")
+	if strings.Contains(result, "Could not find") {
+		fmt.Println("ramdisk stopped")
+	} else {
+		fmt.Println("ramdisk started")
+	}
+}
+
 func sync() {
 	ramdiskBackupDir := getRamdiskBackupDir()
 	verboseExec("rsync", "-av", "/Volumes/ramdisk/", ramdiskBackupDir)
@@ -67,7 +76,7 @@ func verboseExec(args ...string) string {
 func main() {
 
 	flag.Usage = func() {
-		fmt.Printf("Usage: ramdisk [options] {start|sync|stop}>\n")
+		fmt.Printf("Usage: ramdisk [options] {start|sync|status|stop}>\n")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -84,6 +93,8 @@ func main() {
 		start()
 	case "stop":
 		stop()
+	case "status":
+		status()
 	case "sync":
 		sync()
 	default:
